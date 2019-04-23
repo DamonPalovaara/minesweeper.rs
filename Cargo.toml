@@ -1,0 +1,9 @@
+[package]
+name = "minesweeper"
+version = "0.1.0"
+authors = ["dpalovaa"]
+edition = "2018"
+
+[dependencies]
+rand = "0.6.5"
+read_input = "0.8.0"
