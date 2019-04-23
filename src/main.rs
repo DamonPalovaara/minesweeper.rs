@@ -150,7 +150,7 @@ struct Game {
 				self.draw();
 			},
 			Command::Flag(index) => { 
-				self.grid[index.x][index.y].is_flag = !self.grid[index.x][index.y].is_flag; 
+				self.grid[index.x][index.y].toggle_flag(); 
 				self.draw(); 
 			},
 			Command::Draw  => self.draw(),
@@ -250,7 +250,7 @@ struct Game {
 		self.grid[index.x][index.y].is_visible = true;
 		// If cell is not touching any bombs call this method on all of it's neighbors
 		if self.grid[index.x][index.y].bombs == 0 {
-			self.get_neighbors((index.x as i32, index.y as i32)).iter().for_each(|neighbor| {
+			self.get_neighbors((index.x as i32, index.y as i32)).iter().for_each( |neighbor| {
 				self.make_visible(*neighbor);
 			});
 		}
@@ -283,4 +283,6 @@ struct Cell {
 		else if  self.bombs == 0 { print!("   "); }
 		else                     { print!("{}  ", self.bombs); }
 	}
+	// Toggle flag
+	fn toggle_flag(&mut self) { self.is_flag = !self.is_flag; }
 }
