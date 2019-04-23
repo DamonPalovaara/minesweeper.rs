@@ -32,7 +32,7 @@ fn main() {
 	game.draw();
 
 	// The mainloop
-	while game.is_running { game.handle_command( input.get_command() ); }
+	while game.is_running { game.process_command( input.get_command() ); }
 }
 
 // Responsible for fetching data from user and sending commands to the game
@@ -136,7 +136,7 @@ struct Game {
 	// Implement preset sizes here...
 
 	// Command handler
-	fn handle_command(&mut self, command: Command) {
+	fn process_command(&mut self, command: Command) {
 		match command {
 			Command::Select(index) => {
 				// Generate the bombs after first selection is known
