@@ -8,10 +8,10 @@ use rand::seq::SliceRandom; // ^^^
 fn main() {
 	// Get the size of the board
 	let size = Point {
-		x: input()                                             // Ask user for input until it matches desired type
-			.inside_err(1..99, "Value must be between 1 & 98") // Checks if input is in desired range printing the message if not 
-			.repeat_msg("Enter a width: ")                     // User command to fetch input
-			.err("Value must be a positive number, try again").get(),   // Error message if data isn't of right type
+		x: input()                                                    // Ask user for input until it matches desired type
+			.inside_err(1..99, "Value must be between 1 & 98")        // Checks if input is in desired range printing the message if not 
+			.repeat_msg("Enter a width: ")                            // User command to fetch input
+			.err("Value must be a positive number, try again").get(), // Error message if data isn't of right type
 		y: input()
 			.inside_err(1..99, "Value must be between 1 & 98")
 			.repeat_msg("Enter a height: ")
@@ -105,6 +105,7 @@ enum Command {
 struct Point { x: usize, y: usize } 
 
 // All the game components are contained here
+// Consider refactoring out the grid into it's own struct
 struct Game {
 	size: Point,          // The size of the board
 	bombs: usize,         // Number of bombs
