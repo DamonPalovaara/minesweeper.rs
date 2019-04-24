@@ -5,4 +5,11 @@ So far the program only runs in the terminal
 
 If you have the rust tool chain you can compile and run by simply using "cargo run" in the main directory
 
-use the "help" command to list all of the commands
+Use the "help" command once running to list all of the commands
+
+TODO: 
+  Implement win condition
+  Don't generate mines in a 3x3 grid around the initial selection
+  Implement "RESET" command
+  Implement a timer
+  Implement storing top scores
