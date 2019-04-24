@@ -20,7 +20,7 @@ fn main() {
 
 	// Get how many mines to plant
 	let num_mines = input()
-		.inside_err(0..(size.x * size.y), "Need at least 1 cell that's not a mine")
+		.inside_err(0..=(size.x * size.y - 10), "Give yourself at least 10 cells without bombs")
 		.repeat_msg("How many mines? ")
 		.err("Value must be a postive number, try again").get();
 
@@ -176,19 +176,26 @@ struct Game {
 	}
 	// Call this after selecting first cell, selected cell is never a bomb
 	fn generate_bombs(&mut self, selected: Point) {
+		// Create a vector containing all cell positions
 		let mut cells = Vec::new();
-		// Create vector of all cells not including selected cell
 		for y in 0..self.size.y {
-			for x in 0..self.size.x {
-				if !(x == selected.x && y == selected.y) { cells.push((x, y)); }
-			}
+			for x in 0..self.size.x { cells.push((x, y)); }
 		}
 		// Shuffle the vector
 		cells.shuffle(&mut thread_rng());
-		// The first cells to self.bombs are the location of bombs
-		for i in 0..self.bombs {
-			self.grid[ cells[i].0 ][ cells[i].1 ].is_bomb = true;
-		}
+		// Add bombs to the grid until reaching self.bombs (the number of bombs to be generated)
+		let mut count = 0; // Used to count the number of successfully added bombs
+		cells.iter().for_each( |cell| {
+			if count == self.bombs { return; }
+			// Ignore cells within a 1-cell radius of selected cell (TODO: Clean this up)
+			// I'm casting to i32 here so I don't get an overflow error
+			// Consider storing values as i32 than cast to usize for indexing the cell (1 cast vs a lot)
+			if !((selected.x as i32 - 1 <= cell.0 as i32 && cell.0 as i32 <= selected.x as i32 + 1) &&
+			     (selected.y as i32 - 1 <= cell.1 as i32 && cell.1 as i32 <= selected.y as i32 + 1)) {
+				self.grid[ cell.0 ][ cell.1 ].is_bomb = true;
+				count += 1; // Bomb added successefully, increment the counter
+			}			
+		});
 	}
 	// Iterates over board getting a list of neighbors for each cell and counting how many of the neighbors are bombs
 	fn count_bombs(&mut self) {
