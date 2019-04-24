@@ -20,7 +20,7 @@ fn main() {
 
 	// Get how many mines to plant
 	let num_mines = input()
-		.inside_err(0..(size.x * size.y), "Can't have more mines than cells")
+		.inside_err(0..(size.x * size.y), "Need at least 1 cell that's not a mine")
 		.repeat_msg("How many mines? ")
 		.err("Value must be a postive number, try again").get();
 
