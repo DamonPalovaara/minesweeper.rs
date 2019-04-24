@@ -11,18 +11,18 @@ fn main() {
 		x: input()                                             // Ask user for input until it matches desired type
 			.inside_err(1..99, "Value must be between 1 & 98") // Checks if input is in desired range printing the message if not 
 			.repeat_msg("Enter a width: ")                     // User command to fetch input
-			.err("Value must be a number, try again").get(),   // Error message if data isn't of right type
+			.err("Value must be a positive number, try again").get(),   // Error message if data isn't of right type
 		y: input()
 			.inside_err(1..99, "Value must be between 1 & 98")
 			.repeat_msg("Enter a height: ")
-			.err("Value must be a number, try again").get(),
+			.err("Value must be a positive number, try again").get(),
 	};
 
 	// Get how many mines to plant
 	let num_mines = input()
 		.inside_err(0..(size.x * size.y), "Can't have more mines than cells")
 		.repeat_msg("How many mines? ")
-		.err("Value must be a number, try again").get();
+		.err("Value must be a postive number, try again").get();
 
 	// Create the game
 	let mut game = Game::new( size, num_mines );
@@ -71,11 +71,11 @@ struct TerminalInput{
 			x: input()
 				.inside_err(1..=self.size.x, "x is out of bounds, try again")
 				.repeat_msg("Enter a x coordinate: ")
-				.err("Input is not a number, try again").get() - 1,
+				.err("Input must be a positive number, try again").get() - 1,
 			y: input()
 				.inside_err(1..=self.size.y, "y is out of bounds, try again")
 				.repeat_msg("Enter a y coordinate: ")
-				.err("Input is not a number, try again").get() - 1
+				.err("Input must be a positive number, try again").get() - 1
 		}
 	}
 	// Prints out the commands for the user
