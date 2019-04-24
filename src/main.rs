@@ -1,3 +1,15 @@
+/*  
+Consider putting structs into seperate files to upgrade readability (didn't realize the project would get this large)
+
+TODO:
+	- Create a method for generating a board
+		* Allow switching between easy/moderate/hard/custom boards
+	- Keep track of time and store top scores
+	- Some of the stuff going on in the main function can me refactored else where
+	- Do something when the game is lost
+	- Implement Reset command
+	- Finish TODO list
+*/
 use read_input::prelude::*; // Powerful library to fetch user input.
                             // Library auto parses to desired type and allows you to set up ranges data can be within
                             // Will keep asking user to try again until inputed data passes your checks
@@ -106,6 +118,8 @@ struct Point { x: usize, y: usize }
 
 // All the game components are contained here
 // Consider refactoring out the grid into it's own struct
+// Make grid responsible for updating/drawing the board
+// Game should be responsible for capturing input and sending it to the grid
 struct Game {
 	size: Point,          // The size of the board
 	bombs: usize,         // Number of bombs
@@ -143,7 +157,7 @@ struct Game {
 				// Generate the bombs after first selection is known
 				// that way you never start off by clicking on a bomb
 				if !self.is_generated {
-					self.generate_bombs(index);
+					self.generate_bombs(index.x as i32, index.y as i32);
 					self.count_bombs();
 					self.is_generated = true;
 				}
@@ -175,24 +189,21 @@ struct Game {
 		}
 	}
 	// Call this after selecting first cell, selected cell is never a bomb
-	fn generate_bombs(&mut self, selected: Point) {
+	fn generate_bombs(&mut self, sel_x: i32, sel_y: i32) {
 		// Create a vector containing all cell positions
 		let mut cells = Vec::new();
-		for y in 0..self.size.y {
-			for x in 0..self.size.x { cells.push((x, y)); }
+		// Fill the vector with all the cells
+		for y in 0..self.size.y as i32 {
+			for x in 0..self.size.x as i32 { cells.push((x, y)); }
 		}
 		// Shuffle the vector
 		cells.shuffle(&mut thread_rng());
 		// Add bombs to the grid until reaching self.bombs (the number of bombs to be generated)
 		let mut count = 0; // Used to count the number of successfully added bombs
 		cells.iter().for_each( |cell| {
-			if count == self.bombs { return; }
-			// Ignore cells within a 1-cell radius of selected cell (TODO: Clean this up)
-			// I'm casting to i32 here so I don't get an overflow error
-			// Consider storing values as i32 than cast to usize for indexing the cell (1 cast vs a lot)
-			if !((selected.x as i32 - 1 <= cell.0 as i32 && cell.0 as i32 <= selected.x as i32 + 1) &&
-			     (selected.y as i32 - 1 <= cell.1 as i32 && cell.1 as i32 <= selected.y as i32 + 1)) {
-				self.grid[ cell.0 ][ cell.1 ].is_bomb = true;
+			if count == self.bombs { return; } // Return out of closure
+			if !((sel_x - 1 <= cell.0 && cell.0 <= sel_x + 1) && (sel_y - 1 <= cell.1 && cell.1 <= sel_y + 1)) {
+				self.grid[ cell.0 as usize ][ cell.1 as usize ].is_bomb = true;
 				count += 1; // Bomb added successefully, increment the counter
 			}			
 		});
