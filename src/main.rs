@@ -23,7 +23,18 @@ Refactor:
 		fn get_idx(x: i32, y: i32) -> usize {
 			...
 		}
+		fn save(self) -> Vec<u8> {
+			// All values can be compressed into a u8
+			// b0: is_bomb, b1: is_visble, b2->b4: other_bools , b5->b7: num_bombs
+		}
 		...
+	} 
+
+	Game {
+		input_handler
+		command_handler
+		board
+		game_state
 	}
 
 Canvas thoughts:
