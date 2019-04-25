@@ -2,13 +2,25 @@
 Consider putting structs into seperate files to upgrade readability (didn't realize the project would get this large)
 
 TODO:
-	- Create a method for generating a board
+	- Create a method for generating the board
 		* Allow switching between easy/moderate/hard/custom boards
 	- Keep track of time and store top scores
 	- Some of the stuff going on in the main function can me refactored else where
 	- Do something when the game is lost
 	- Implement Reset command
+	- Convert cells from a 2D array into a 1D array
+		* Create method (x: i32, y: i32) -> cell_idx: usize
 	- Finish TODO list
+
+Canvas thoughts:
+	- Communicate with JS via command enum
+		* Figure out a way to convert JS -> Command enums
+	- Write clear method to clear the screen
+	- Write draw method for cell
+	- Figure out a way to batch draw calls
+	- Draw only what's neccesary
+	- Pass JS a single pointer to where the draw call information is at
+	- Write JS method for processing the Rust data
 */
 use read_input::prelude::*; // Powerful library to fetch user input.
                             // Library auto parses to desired type and allows you to set up ranges data can be within
@@ -189,6 +201,8 @@ struct Game {
 		}
 	}
 	// Call this after selecting first cell, selected cell is never a bomb
+	// sel = selection
+	// Note that I use i32 here to avoid getting underflow
 	fn generate_bombs(&mut self, sel_x: i32, sel_y: i32) {
 		// Create a vector containing all cell positions
 		let mut cells = Vec::new();
@@ -216,7 +230,7 @@ struct Game {
 		for y in 0..self.size.y {
 			for x in 0..self.size.x {
 				// Gets list of neighbors and iterates over each counting how many are bombs
-				self.get_neighbors( (x as i32, y as i32) ).iter().for_each( |neighbor| {
+				self.get_neighbors( x as i32, y as i32 ).iter().for_each( |neighbor| {
 					if self.grid[neighbor.x][neighbor.y].is_bomb { bombs += 1; }
 				});
 				// Store the count
@@ -227,7 +241,7 @@ struct Game {
 		}
 	}
 	// Returns a list of indexes to neighboring cells
-	fn get_neighbors(&self, index: (i32, i32)) -> Vec<Point> {
+	fn get_neighbors(&self, loc_x: i32, loc_y: i32) -> Vec<Point> {
 		// Initalize the vector (using with capacity of 8 because we know it won't get bigger than that)
 		let mut neighbors = Vec::with_capacity(8);
 		// Iterates for (-1, -1) to (1, 1) away
@@ -236,11 +250,11 @@ struct Game {
 				// (0, 0) means self which is not a neighboring cell (I'm not neighbors with myself)
 				if x == 0 && y == 0 { continue; }
 				// Check if x is in bounds
-				if index.0 + x < 0 || index.0 + x >= self.size.x as i32 { continue; }
+				if loc_x + x < 0 || loc_x + x >= self.size.x as i32 { continue; }
 				// check if y is in bounds
-				if index.1 + y < 0 || index.1 + y >= self.size.y as i32 { continue; }
+				if loc_y + y < 0 || loc_y + y >= self.size.y as i32 { continue; }
 				// All checks were passed, add neighbor to the list
-				neighbors.push( Point { x: (index.0 + x) as usize, y: (index.1 + y) as usize } );
+				neighbors.push( Point { x: (loc_x + x) as usize, y: (loc_y + y) as usize } );
 			}
 		}
 		return neighbors;
@@ -269,7 +283,7 @@ struct Game {
 		self.grid[index.x][index.y].is_visible = true;
 		// If cell is not touching any bombs call this method on all of it's neighbors
 		if self.grid[index.x][index.y].bombs == 0 {
-			self.get_neighbors((index.x as i32, index.y as i32)).iter().for_each( |neighbor| {
+			self.get_neighbors(index.x as i32, index.y as i32).iter().for_each( |neighbor| {
 				self.make_visible(*neighbor);
 			});
 		}
