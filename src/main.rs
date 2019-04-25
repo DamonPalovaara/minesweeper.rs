@@ -12,6 +12,20 @@ TODO:
 		* Create method (x: i32, y: i32) -> cell_idx: usize
 	- Finish TODO list
 
+Refactor:
+	- Convert Cell into Cells to replace grid inside Game struct
+	struct Cells {
+		is_bomb:    Vec<bool>,
+		is_visible: Vec<bool>,
+		num_bombs:  Vec<u8>,
+		...
+	} impl Cells {
+		fn get_idx(x: i32, y: i32) -> usize {
+			...
+		}
+		...
+	}
+
 Canvas thoughts:
 	- Communicate with JS via command enum
 		* Figure out a way to convert JS -> Command enums
