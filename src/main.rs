@@ -210,6 +210,7 @@ struct Game {
 			Command::Quit  => { self.is_running = false; }
 		}
 	}
+
 	// The draw method
 	fn draw(&self) {
 		// Draw the x indexes above each column
@@ -225,6 +226,7 @@ struct Game {
 			println!();
 		}
 	}
+
 	// Call this after selecting first cell, selected cell is never a bomb
 	// sel = selection
 	// Note that I use i32 here to avoid getting underflow
@@ -247,6 +249,7 @@ struct Game {
 			}			
 		});
 	}
+
 	// Iterates over board getting a list of neighbors for each cell and counting how many of the neighbors are bombs
 	fn count_bombs(&mut self) {
 		// Temp variable used to store the number of neighboring bombs
@@ -265,11 +268,12 @@ struct Game {
 			}
 		}
 	}
+
 	// Returns a list of indexes to neighboring cells
 	fn get_neighbors(&self, loc_x: i32, loc_y: i32) -> Vec<Point> {
 		// Initalize the vector (using with capacity of 8 because we know it won't get bigger than that)
 		let mut neighbors = Vec::with_capacity(8);
-		// Iterates for (-1, -1) to (1, 1) away
+		// Iterates from (-1, -1) to (1, 1) away
 		for y in -1..=1 {
 			for x in -1..=1 {
 				// (0, 0) means self which is not a neighboring cell (I'm not neighbors with myself)
@@ -284,6 +288,7 @@ struct Game {
 		}
 		return neighbors;
 	}
+
 	// Handle clicked on cell, index is the 2D index of the cell
 	// Method assumes that index is in bounds
 	fn select_cell(&mut self, index: Point) {
@@ -300,6 +305,7 @@ struct Game {
 			self.make_visible(index);
 		}
 	}
+	
 	// This is a recursive method to make cells visible
 	fn make_visible(&mut self, index: Point) {
 		// If cell is visible just return (it has already been processed)
