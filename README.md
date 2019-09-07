@@ -8,8 +8,8 @@ If you have the rust tool chain you can compile and run by simply using "cargo r
 Use the "help" command once running to list all of the commands
 
 TODO: 
-	Implement win condition
-	Don't generate mines in a 3x3 grid around the initial selection
-	Implement "RESET" command
-	Implement a timer
-	Implement storing top scores
+* Implement win condition
+* ~~Don't generate mines in a 3x3 grid around the initial selection~~
+* Implement "RESET" command
+* Implement a timer
+* Implement storing top scores
