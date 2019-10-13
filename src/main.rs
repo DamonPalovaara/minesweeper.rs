@@ -47,6 +47,7 @@ Canvas thoughts:
 	- Pass JS a single pointer to where the draw call information is at
 	- Write JS method for processing the Rust data
 */
+
 use read_input::prelude::*; // Powerful library to fetch user input.
                             // Library auto parses to desired type and allows you to set up ranges data can be within
                             // Will keep asking user to try again until inputed data passes your checks
@@ -77,7 +78,7 @@ fn main() {
 	let mut game = Game::new( size, num_mines );
 	// Create the input handler
 	let mut input = TerminalInput::new( size );
-	// Draw the board once
+	// Initial game render
 	game.draw();
 
 	// The mainloop
@@ -100,7 +101,7 @@ struct TerminalInput{
 	// Turns user input into a command enum to be sent to the game
 	fn get_command(&mut self) -> Command {
 		loop {
-			self.input = input()
+			self.input = input() // Make this a struct variable and change this line with self.input.get()
 				.repeat_msg("Enter a command: ")
 				.default(String::from(""))
 				.get().to_uppercase();
@@ -158,7 +159,7 @@ struct Point { x: usize, y: usize }
 // Make grid responsible for updating/drawing the board
 // Game should be responsible for capturing input and sending it to the grid
 struct Game {
-	size: Point,          // The size of the board
+	size: Point,          // Size of board
 	bombs: usize,         // Number of bombs
 	grid: Vec<Vec<Cell>>, // 2D grid of cells
 	is_generated: bool,   // Flag to keep track of if the board was generated
@@ -166,20 +167,21 @@ struct Game {
 } impl Game {
 	// Initalize the board with a size and number of mines
 	fn new(size: Point, bombs: usize) -> Game {
-		Game {
+
+		println!("Width {}, Height {}", size.x, size.y);
+
+		Game {			
+
 			size:  size.clone(),
 			bombs: bombs,
-			// I create a scope to generate the grid in,
-			// by typing 'grid' on the last line the scope returns grid
 			grid: {
 				let mut grid = Vec::new();
-				let mut row  = Vec::new();
-				for _ in 0..size.y {
-					for _ in 0..size.x { row.push(Cell::new(false)); }
-					grid.push(row.clone());
-					row.clear();
-				}
-				grid // grid returned here
+				let mut column = Vec::new();
+
+				for _ in 0..size.y { column.push( Cell::new( false ) ); }
+				for _ in 0..size.x { grid.push( column.clone() ); }
+
+				grid
 			},
 			is_generated: false,
 			is_running:   true,
@@ -190,23 +192,23 @@ struct Game {
 	// Command handler
 	fn process_command(&mut self, command: Command) {
 		match command {
-			Command::Select(index) => {
+			Command::Select( index ) => {
 				// Generate the bombs after first selection is known
 				// that way you never start off by clicking on a bomb
-				if !self.is_generated {
+				if !self.is_generated { // This is a bit hackish, maybe find a better place to put this
 					self.generate_bombs(index.x as i32, index.y as i32);
 					self.count_bombs();
 					self.is_generated = true;
 				}
-				self.select_cell(index);
+				self.select_cell( index );
 				self.draw();
 			},
-			Command::Flag(index) => { 
+			Command::Flag( index ) => { 
 				self.grid[index.x][index.y].toggle_flag(); 
 				self.draw(); 
 			},
 			Command::Draw  => self.draw(),
-			Command::Reset => {},
+			Command::Reset => {}, // TODO: Implement
 			Command::Quit  => { self.is_running = false; }
 		}
 	}
@@ -305,7 +307,7 @@ struct Game {
 			self.make_visible(index);
 		}
 	}
-	
+
 	// This is a recursive method to make cells visible
 	fn make_visible(&mut self, index: Point) {
 		// If cell is visible just return (it has already been processed)
@@ -321,7 +323,7 @@ struct Game {
 	}
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 // Individual cell
 // Has flags and contains how many bombs it touches
 // Has it's own draw method
