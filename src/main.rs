@@ -167,22 +167,10 @@ struct Game {
 } impl Game {
 	// Initalize the board with a size and number of mines
 	fn new(size: Point, bombs: usize) -> Game {
-
-		println!("Width {}, Height {}", size.x, size.y);
-
-		Game {			
-
+		Game {
 			size:  size.clone(),
 			bombs: bombs,
-			grid: {
-				let mut grid = Vec::new();
-				let mut column = Vec::new();
-
-				for _ in 0..size.y { column.push( Cell::new( false ) ); }
-				for _ in 0..size.x { grid.push( column.clone() ); }
-
-				grid
-			},
+			grid: vec![ vec![ Cell::new( false ); size.y ]; size.x ],
 			is_generated: false,
 			is_running:   true,
 		}
@@ -245,6 +233,7 @@ struct Game {
 		let mut count = 0; // Used to count the number of successfully added bombs
 		cells.iter().for_each( |cell| {
 			if count == self.bombs { return; } // Return out of closure
+			// This checks if cell is within the 3x3 safezone around initial selection
 			if !((sel_x - 1 <= cell.0 && cell.0 <= sel_x + 1) && (sel_y - 1 <= cell.1 && cell.1 <= sel_y + 1)) {
 				self.grid[ cell.0 as usize ][ cell.1 as usize ].is_bomb = true;
 				count += 1; // Bomb added successefully, increment the counter
@@ -252,7 +241,7 @@ struct Game {
 		});
 	}
 
-	// Iterates over board getting a list of neighbors for each cell and counting how many of the neighbors are bombs
+	// Counts and stores the number of neighboring bombs for each cell
 	fn count_bombs(&mut self) {
 		// Temp variable used to store the number of neighboring bombs
 		let mut bombs = 0u8; 
@@ -288,7 +277,7 @@ struct Game {
 				neighbors.push( Point { x: (loc_x + x) as usize, y: (loc_y + y) as usize } );
 			}
 		}
-		return neighbors;
+		neighbors
 	}
 
 	// Handle clicked on cell, index is the 2D index of the cell
