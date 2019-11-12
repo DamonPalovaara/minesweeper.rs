@@ -1,60 +1,9 @@
-/*  
-Consider putting structs into seperate files to upgrade readability (didn't realize the project would get this large)
-
-TODO:
-	- Create a method for generating the board
-		* Allow switching between easy/moderate/hard/custom boards
-	- Keep track of time and store top scores
-	- Some of the stuff going on in the main function can me refactored else where
-	- Do something when the game is lost
-	- Implement Reset command
-	- Convert cells from a 2D array into a 1D array
-		* Create method (x: i32, y: i32) -> cell_idx: usize
-	- Finish TODO list
-
-Refactor:
-	- Convert Cell into Cells to replace grid inside Game struct
-	struct Cells {
-		is_bomb:    Vec<bool>,
-		is_visible: Vec<bool>,
-		num_bombs:  Vec<u8>,
-		...
-	} impl Cells {
-		fn get_idx(x: i32, y: i32) -> usize {
-			...
-		}
-		fn save(self) -> Vec<u8> {
-			// All values can be compressed into a u8
-			// b0: is_bomb, b1: is_visble, b2->b4: other_bools , b5->b7: num_bombs
-		}
-		...
-	} 
-
-	Game {
-		input_handler
-		command_handler
-		board
-		game_state
-	}
-
-Canvas thoughts:
-	- Communicate with JS via command enum
-		* Figure out a way to convert JS -> Command enums
-	- Write clear method to clear the screen
-	- Write draw method for cell
-	- Figure out a way to batch draw calls
-	- Draw only what's neccesary
-	- Pass JS a single pointer to where the draw call information is at
-	- Write JS method for processing the Rust data
-*/
-
 use read_input::prelude::*; // Powerful library to fetch user input.
                             // Library auto parses to desired type and allows you to set up ranges data can be within
                             // Will keep asking user to try again until inputed data passes your checks
 use rand::thread_rng;       // Used for generating random locations for the bombs
 use rand::seq::SliceRandom; // ^^^
 
-// Program starts here 
 fn main() {
 	// Get the size of the board
 	let size = Point {
@@ -74,11 +23,9 @@ fn main() {
 		.repeat_msg("How many mines? ")
 		.err("Value must be a postive number, try again").get();
 
-	// Create the game
 	let mut game = Game::new( size, num_mines );
-	// Create the input handler
 	let mut input = TerminalInput::new( size );
-	// Initial game render
+	
 	game.draw();
 
 	// The mainloop
@@ -91,7 +38,6 @@ struct TerminalInput{
 	input: String, // Place to store the inputed data
 	size:  Point,  // Size of the board used for making in-bounds checks
 } impl TerminalInput {
-	// Create new input handler, must know size of board
 	fn new(size: Point) -> TerminalInput {
 		TerminalInput {
 			input: String::from(""),
@@ -201,79 +147,64 @@ struct Game {
 		}
 	}
 
-	// The draw method
 	fn draw(&self) {
 		// Draw the x indexes above each column
 		print!("   ");		
 		for x in 0..self.size.x { print!("{:02} ", x + 1); }
 		println!();
-		// Draw each row
+		
 		for y in 0..self.size.y {
 			// Draw y index before each row
 			print!("{:02} ", y + 1);
-			// Call draw method on each cell in row
+
 			for x in 0..self.size.x { self.grid[x][y].draw(); }
 			println!();
 		}
 	}
 
 	// Call this after selecting first cell, selected cell is never a bomb
-	// sel = selection
-	// Note that I use i32 here to avoid getting underflow
 	fn generate_bombs(&mut self, sel_x: i32, sel_y: i32) {
-		// Create a vector containing all cell positions
+		// The purpose of this method is to create a vector of all the bombs then
+		// shuffle them and take the first n bombs that aren't in the 3x3 safe zone
 		let mut cells = Vec::new();
-		// Fill the vector with all the cells
 		for y in 0..self.size.y as i32 {
 			for x in 0..self.size.x as i32 { cells.push((x, y)); }
 		}
-		// Shuffle the vector
 		cells.shuffle(&mut thread_rng());
-		// Add bombs to the grid until reaching self.bombs (the number of bombs to be generated)
-		let mut count = 0; // Used to count the number of successfully added bombs
+		let mut count = 0;
 		cells.iter().for_each( |cell| {
-			if count == self.bombs { return; } // Return out of closure
+			if count == self.bombs { return; }
 			// This checks if cell is within the 3x3 safezone around initial selection
 			if !((sel_x - 1 <= cell.0 && cell.0 <= sel_x + 1) && (sel_y - 1 <= cell.1 && cell.1 <= sel_y + 1)) {
 				self.grid[ cell.0 as usize ][ cell.1 as usize ].is_bomb = true;
-				count += 1; // Bomb added successefully, increment the counter
+				count += 1;
 			}			
 		});
 	}
 
 	// Counts and stores the number of neighboring bombs for each cell
 	fn count_bombs(&mut self) {
-		// Temp variable used to store the number of neighboring bombs
-		let mut bombs = 0u8; 
-		// Iterate over board
+		let mut bombs = 0u8;
 		for y in 0..self.size.y {
 			for x in 0..self.size.x {
-				// Gets list of neighbors and iterates over each counting how many are bombs
 				self.get_neighbors( x as i32, y as i32 ).iter().for_each( |neighbor| {
 					if self.grid[neighbor.x][neighbor.y].is_bomb { bombs += 1; }
 				});
-				// Store the count
 				self.grid[x][y].bombs = bombs;
-				// Reset count for next cell
 				bombs = 0;
 			}
 		}
 	}
 
-	// Returns a list of indexes to neighboring cells
+	// Returns a vector of indexes to neighboring cells
 	fn get_neighbors(&self, loc_x: i32, loc_y: i32) -> Vec<Point> {
-		// Initalize the vector (using with capacity of 8 because we know it won't get bigger than that)
 		let mut neighbors = Vec::with_capacity(8);
-		// Iterates from (-1, -1) to (1, 1) away
 		for y in -1..=1 {
 			for x in -1..=1 {
-				// (0, 0) means self which is not a neighboring cell (I'm not neighbors with myself)
 				if x == 0 && y == 0 { continue; }
-				// Check if x is in bounds
 				if loc_x + x < 0 || loc_x + x >= self.size.x as i32 { continue; }
-				// check if y is in bounds
 				if loc_y + y < 0 || loc_y + y >= self.size.y as i32 { continue; }
-				// All checks were passed, add neighbor to the list
+
 				neighbors.push( Point { x: (loc_x + x) as usize, y: (loc_y + y) as usize } );
 			}
 		}
@@ -299,9 +230,9 @@ struct Game {
 
 	// This is a recursive method to make cells visible
 	fn make_visible(&mut self, index: Point) {
-		// If cell is visible just return (it has already been processed)
+		// The base case
 		if self.grid[index.x][index.y].is_visible { return; }
-		// Make cell visible
+		
 		self.grid[index.x][index.y].is_visible = true;
 		// If cell is not touching any bombs call this method on all of it's neighbors
 		if self.grid[index.x][index.y].bombs == 0 {
@@ -322,7 +253,6 @@ struct Cell {
 	is_flag:    bool, // Is the cell a flag?
 	bombs:      u8,   // Number of neighboring bombs
 } impl Cell {
-	// Create a cell
 	fn new(is_bomb: bool) -> Cell {
 		Cell {
 			is_bomb:    is_bomb,
